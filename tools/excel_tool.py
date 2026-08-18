@@ -79,19 +79,29 @@ def create_workbook(
     return xlsx_path
 
 
-def open_in_excel(xlsx_path: Path) -> None:
+import sys
+
+def open_in_excel(xlsx_path: Path) -> str:
     """
     Open the xlsx file in Microsoft Excel.
     Tries known Excel paths; falls back to os.startfile on Windows.
+    On non-Windows OS (e.g. Linux Docker), skips GUI launch gracefully.
     """
+    if sys.platform != "win32":
+        return f"Saved workbook to {xlsx_path.name} (GUI launch skipped on Linux container)"
+
     # Try known Excel executable paths first
     for excel_exe in config.EXCEL_PATHS:
         if os.path.isfile(excel_exe):
             subprocess.Popen([excel_exe, str(xlsx_path)])
-            return
+            return f"Launched Excel with {xlsx_path.name}"
 
-    # Fall back: let Windows open the file with the default application
-    os.startfile(str(xlsx_path))
+    # Fall back: let Windows open the file with default app if startfile exists
+    if hasattr(os, "startfile"):
+        os.startfile(str(xlsx_path))
+        return f"Launched default application with {xlsx_path.name}"
+
+    return f"Saved workbook to {xlsx_path.name}"
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────────

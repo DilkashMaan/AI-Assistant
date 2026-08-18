@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 
 from tools.reporter import Reporter, StepResult
-from tools import llm_client, csv_tool, excel_tool, sheets_tool
+from tools import llm_client, csv_tool, excel_tool, sheets_tool, db_tool
 
 console = Console()
 
@@ -100,14 +100,14 @@ def step_create_excel(reporter: Reporter, headers: list[str], rows: list[list[st
 
 
 def step_open_excel(reporter: Reporter, xlsx_path):
-    """Step 6: Open the workbook in Microsoft Excel."""
+    """Step 6: Open the workbook in Microsoft Excel (or save in headless/Linux OS)."""
     reporter.step_start("Open in Microsoft Excel")
     try:
-        excel_tool.open_in_excel(xlsx_path)
+        msg = excel_tool.open_in_excel(xlsx_path)
         reporter.step_done(StepResult(
             step="Open in Microsoft Excel",
             success=True,
-            detail="Launched Excel with workbook",
+            detail=msg,
         ))
     except Exception as e:
         reporter.step_done(StepResult("Open in Microsoft Excel", False, str(e)))
@@ -147,12 +147,64 @@ def _friendly_sheets_error(exc: Exception) -> str:
     return msg[:300]
 
 
+def step_log_postgres(
+    reporter: Reporter,
+    prompt: str,
+    entity: str,
+    title: str,
+    csv_path,
+    xlsx_path,
+    sheets_url,
+    data: list[dict],
+):
+    """Step 8: Log workflow run and generated records into PostgreSQL database."""
+    reporter.step_start("Log run to PostgreSQL Database")
+    try:
+        run_id = db_tool.log_workflow_run(
+            prompt=prompt,
+            entity=entity,
+            title=title,
+            csv_path=csv_path,
+            excel_path=xlsx_path,
+            google_sheets_url=sheets_url,
+            data=data,
+        )
+        if run_id:
+            reporter.step_done(
+                StepResult(
+                    step="Log to PostgreSQL Database",
+                    success=True,
+                    detail=f"Run ID #{run_id} logged with {len(data)} records in DB",
+                )
+            )
+        else:
+            reporter.step_done(
+                StepResult(
+                    step="Log to PostgreSQL Database",
+                    success=True,
+                    detail="Database disabled/offline (skipped)",
+                )
+            )
+    except Exception as e:
+        reporter.step_done(StepResult("Log to PostgreSQL Database", False, str(e)))
+
+
 # ── Main orchestrator ──────────────────────────────────────────────────────────
 
 def run_agent(prompt: str) -> None:
     """Execute the full agent workflow for the given natural language prompt."""
     reporter = Reporter(title="AI Data Import Agent")
     reporter.start(prompt)
+
+    # Initialize PostgreSQL schema if DB connection is active
+    db_tool.init_db()
+
+    entity = "record"
+    sheet_title = "Sample Data"
+    csv_path = None
+    xlsx_path = None
+    sheets_url = None
+    data = []
 
     try:
         # ── Step 1: Understand the prompt ──────────────────────────────────
@@ -180,7 +232,10 @@ def run_agent(prompt: str) -> None:
         step_open_excel(reporter, xlsx_path)
 
         # ── Step 7: Google Sheets upload (non-fatal) ───────────────────────
-        step_upload_sheets(reporter, sheet_title, headers, rows)
+        sheets_url = step_upload_sheets(reporter, sheet_title, headers, rows)
+
+        # ── Step 8: Log to PostgreSQL Database (non-fatal) ──────────────────
+        step_log_postgres(reporter, prompt, entity, sheet_title, csv_path, xlsx_path, sheets_url, data)
 
     except Exception as exc:
         console.print(f"\n[bold red]Fatal error:[/bold red] {exc}")
@@ -189,6 +244,7 @@ def run_agent(prompt: str) -> None:
 
     finally:
         reporter.summary()
+
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────

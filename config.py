@@ -59,3 +59,12 @@ EXCEL_PATHS = [
 
 # ── Data Generation ───────────────────────────────────────────────────────────
 MIN_DATA_ROWS = 20  # Minimum rows the LLM must generate
+
+# ── PostgreSQL Database ───────────────────────────────────────────────────────
+DB_HOST = os.environ.get("POSTGRES_HOST", "db")
+DB_PORT = int(os.environ.get("POSTGRES_PORT", 5432))
+DB_NAME = os.environ.get("POSTGRES_DB", "ai_assistant_db")
+DB_USER = os.environ.get("POSTGRES_USER", "postgres")
+DB_PASS = os.environ.get("POSTGRES_PASSWORD", "postgres")
+ENABLE_DB = os.environ.get("ENABLE_DB", "true").lower() in ("true", "1", "yes")
+
