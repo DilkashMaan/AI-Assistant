@@ -2,17 +2,41 @@
 
 import sys
 import traceback
+from typing import Optional
 
 from rich.console import Console
 from rich.prompt import Prompt
 
 from tools.reporter import Reporter, StepResult
-from tools import llm_client, csv_tool, excel_tool, sheets_tool, db_tool
+from tools import llm_client, csv_tool, excel_tool, sheets_tool, db_tool, prompt_logger
 
 console = Console()
 
 
 # ── Step wrappers ──────────────────────────────────────────────────────────────
+
+def step_save_prompt(reporter: Reporter, prompt: str) -> Optional[int]:
+    """Step 0: Save user prompt with timestamp to PostgreSQL DB."""
+    reporter.step_start("Log prompt to PostgreSQL DB")
+    try:
+        prompt_id = prompt_logger.save_prompt(prompt)
+        if prompt_id:
+            reporter.step_done(StepResult(
+                step="Log prompt to DB",
+                success=True,
+                detail=f"Prompt ID #{prompt_id} logged in DB",
+            ))
+        else:
+            reporter.step_done(StepResult(
+                step="Log prompt to DB",
+                success=True,
+                detail="Database disabled/offline (skipped)",
+            ))
+        return prompt_id
+    except Exception as e:
+        reporter.step_done(StepResult("Log prompt to DB", False, str(e)))
+        return None
+
 
 def step_parse_prompt(reporter: Reporter, prompt: str) -> dict:
     """Step 1: Parse the user's natural language prompt via LLM."""
@@ -198,6 +222,9 @@ def run_agent(prompt: str) -> None:
 
     # Initialize PostgreSQL schema if DB connection is active
     db_tool.init_db()
+
+    # Log user prompt with timestamp ("when we give")
+    step_save_prompt(reporter, prompt)
 
     entity = "record"
     sheet_title = "Sample Data"

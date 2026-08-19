@@ -19,6 +19,7 @@ AI_Assistant/
 │   ├── excel_tool.py     ← Excel workbook builder & launcher
 │   ├── sheets_tool.py    ← Google Sheets API integration
 │   ├── db_tool.py        ← PostgreSQL database logger & JSONB recorder
+│   ├── prompt_logger.py  ← Database prompt history logger (prompt_logs table)
 │   └── reporter.py       ← Rich terminal status reporter
 └── output/               ← Generated CSV & Excel files (mounted volume)
 ```
