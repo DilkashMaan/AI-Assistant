@@ -51,7 +51,6 @@ def get_connection():
 
 
 def init_db() -> bool:
-    """Initialize database tables if they do not already exist."""
     conn = get_connection()
     if not conn:
         return False
@@ -75,7 +74,6 @@ def init_db() -> bool:
                     );
                 """)
 
-                # Table 2: Generated entity data records (stored as JSONB)
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS generated_records (
                         id SERIAL PRIMARY KEY,
@@ -104,7 +102,6 @@ def init_db() -> bool:
 
 
 def log_prompt(prompt: str) -> Optional[int]:
-    """Log a user prompt with timestamp into PostgreSQL prompt_logs table."""
     conn = get_connection()
     if not conn:
         return None
@@ -136,11 +133,6 @@ def log_workflow_run(
     data: List[Dict[str, Any]],
     status: str = "SUCCESS",
 ) -> Optional[int]:
-    """
-    Record a complete workflow execution in PostgreSQL and save generated rows into JSONB.
-
-    Returns the inserted run_id or None if DB is disconnected.
-    """
     conn = get_connection()
     if not conn:
         return None
