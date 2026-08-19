@@ -1,21 +1,4 @@
-# 🤖 AI Data Import Agent (Docker & PostgreSQL Containerized)
 
-An autonomous AI agent that accepts natural language prompts, generates realistic sample data using **Groq LLM**, imports it into both **Microsoft Excel** and **Google Sheets**, and stores workflow execution logs & JSONB dataset records in a **PostgreSQL Database** — containerized with **Docker & Docker Compose**.
-
----
-
-## ✨ Features
-
-- 🧠 **Natural Language Input** — Works with any prompt ("employees", "students", "product inventory", etc.)
-- 🔄 **Fully Dynamic** — No hardcoded data; Groq LLM generates schema + 25 rows dynamically every time
-- 📄 **CSV Generation** — Timestamped file saved to `output/`
-- 📊 **Excel Workbook** — Formatted `.xlsx` with bold navy headers, alternating rows, freeze panes, and auto-filters
-- 🌐 **Google Sheets Integration** — Uploads formatted data and returns a shareable link
-- 🗄️ **PostgreSQL Storage** — Automatically logs run metadata and saves datasets as JSONB records into PostgreSQL
-- 🐳 **Docker & Docker Compose** — Containerized architecture with Python 3.12 backend and PostgreSQL database
-- ✅ **Step-by-Step Reporting** — Colored status table for each step in real time
-
----
 
 ## 📁 Project Structure
 
@@ -42,7 +25,7 @@ AI_Assistant/
 
 ---
 
-## 🐳 Docker & Container Management Commands
+## Docker & Container Management Commands
 
 ### 1. Build and Start Container Stack
 
@@ -132,7 +115,7 @@ docker exec -it ai_assistant_db psql -U postgres -d ai_assistant_db -c "SELECT r
 
 ---
 
-## ⚙️ Local / Direct Execution (Without Docker)
+## Local / Direct Execution (Without Docker)
 
 ### 1. Install dependencies
 
@@ -162,7 +145,7 @@ python agent.py "Create a sample employee CSV and import it into Excel and Googl
 
 ---
 
-## 📋 Example Terminal Output
+##Example Terminal Output
 
 ```text
 ┌────────────────────────── AI AI Data Import Agent ──────────────────────────┐
